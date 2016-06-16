@@ -1,6 +1,7 @@
 /*
 espDMX library
 Copyright (c) 2016, Matthew Tong
+https://github.com/mtongnz/espDMX
 */
 
 #include <stdlib.h>
