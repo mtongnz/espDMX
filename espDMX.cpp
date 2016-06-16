@@ -4,50 +4,6 @@ espDMX library    - Allows 2 full DMX universes to be output from an ESP8266 via
 
 Copyright (c) 2016, Matthew Tong
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
-later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program.
-If not, see http://www.gnu.org/licenses/
-
-
-
-HOW TO USE:
-
-dmxA uses the same uart as Serial, dmxB uses the same uart as Serial1.  If you wish to use a serial port, dont call
-the .begin() function of the relevant dmx port.
-
-Include the following code in setup.  ledPin is the pins to put status LEDs on, ledIntensity is the intensity (0 - 255).
-One or neither parameter may be supplied.
-
-  dmxA.begin(ledPin, ledIntensity);
-  dmxB.begin(ledPin, ledIntensity);
-
-To change the LED intensity later, use the following:
-
-  dmxN.ledIntensity(newIntensity);
-
-Now set some channels.  data is a byte array up to 512 length, numChans is the number of channels you're setting,
-startChan is the channel number (1 - 512) of the first item in data.
-
-  dmxN.setChans(byte *data, uint16_t numChans, uint16_t startChan);
-  
-  // the following assumes numChans starting at channel 1
-  dmxN.setChans(byte *data, uint16_t numChans);
-  
-  // the following assumes 512 channels starting at channel 1
-  dmxN.setChans(byte *data);
-
-Note that no data will be sent until the first setChans() function is called.
-
-To stop DMX transmission, use the following function.  It will leave the DMX line in an idle (HIGH) state.
-
-  dmxN.end();
-
 */
 
 #include <stdlib.h>
