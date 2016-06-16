@@ -24,6 +24,7 @@ If not, see http://www.gnu.org/licenses/
 #define DMX_TX_BAUD           250000
 #define DMX_FULL_UNI_TIMING   1000   // How often to output full 512 channel universe (in milliseconds)
 #define DMX_NO_LED            200
+#define byte uint8_t
 
 // DMX states
 enum dmx_state {
