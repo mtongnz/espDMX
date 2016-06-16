@@ -1,0 +1,16 @@
+#######################################
+# Syntax Coloring Map espDMX
+#######################################
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+espDMX	KEYWORD1
+dmxA	KEYWORD1
+dmxB	KEYWORD1
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+end	KEYWORD2
+ledIntensity	KEYWORD2
+setChans	KEYWORD2
