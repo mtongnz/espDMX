@@ -1,7 +1,5 @@
 # esp8266DMX
-Initial version by Matthew Tong, June 2016
-
-This library is derived from the HardwareSerial library.
+Initial version by Matthew Tong, June 2016.  This library is derived from the HardwareSerial library.
 
 This library will transmit up to 2 DMX universes from an ESP8266 module.  It utilizes the hardware UARTs and is entirely interupt driven meaning the DMX output has very precise timing.
 
