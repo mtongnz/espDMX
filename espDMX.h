@@ -1,8 +1,7 @@
 /*
-
-espDMX library    - Allows 2 full DMX universes to be output from an ESP8266 via it's uart ports.
-
+espDMX library
 Copyright (c) 2016, Matthew Tong
+https://github.com/mtongnz/espDMX
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -13,7 +12,6 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Ge
 
 You should have received a copy of the GNU General Public License along with this program.
 If not, see http://www.gnu.org/licenses/
-
 */
 
 #ifndef espDMX_h
