@@ -1,9 +1,6 @@
 /*
-
-espDMX library    - Allows 2 full DMX universes to be output from an ESP8266 via it's uart ports.
-
+espDMX library
 Copyright (c) 2016, Matthew Tong
-
 */
 
 #include <stdlib.h>
