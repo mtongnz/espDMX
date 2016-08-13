@@ -60,6 +60,8 @@ class espDMX: public Stream {
         }
         void setChans(byte*, uint16_t, uint16_t);
 
+        uint16_t numChans();
+        
         int available(void) override;
         int peek(void) override;
         int read(void) override;
