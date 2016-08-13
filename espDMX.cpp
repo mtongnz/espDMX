@@ -334,6 +334,12 @@ void espDMX::setChans(byte *data, uint16_t numChans, uint16_t startChan) {
   dmx_set_chans(_dmx, data, numChans, startChan);
 }
 
+uint16_t espDMX::numChans() {
+  if(_dmx== 0)
+    return 0;
+  return _dmx->numChans;
+}
+
 void espDMX::ledIntensity(uint8_t newIntensity) {
   if (_dmx == 0)
     return;
