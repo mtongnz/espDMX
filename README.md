@@ -17,8 +17,10 @@ Include the following code in setup.  ledPin is the pin to put status LED on, le
 ```
   // No status LED
   dmxN.begin();
+  
   // Status LED at full intensity
   dmxN.begin(ledPin);
+  
   // Status LED at specified intensity
   dmxN.begin(ledPin, ledIntensity);
 ```
@@ -29,8 +31,10 @@ To change the LED intensity later, use the following:
 Now set some channels.  data is a byte array up to 512 length, numChans is the number of channels you're setting, startChan is the channel number (1 - 512) of the first item in data.
 ```
   dmxN.setChans(data, numChans, startChan);
+  
   // assume startChan = 1
   dmxN.setChans(data, numChans);
+  
   // assume 512 channels starting at channel 1
   dmxN.setChans(data);
 ```
