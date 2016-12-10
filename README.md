@@ -1,11 +1,19 @@
-# esp8266DMX
+# esp8266DMX v2
 Initial version by Matthew Tong, June 2016.  This library is derived from the HardwareSerial library.
+
+This library has been updated to support new functionality but is compatible with the previous library.
 
 This library will transmit up to 2 DMX universes from an ESP8266 module.  It utilizes the hardware UARTs and is entirely interupt driven meaning the DMX output has very precise timing.
 
 The DMX will refresh at a minimum rate of 44Hz.  The library will detect how many channels have been set, outputting less than 512 if possible to increase the refresh rate.  This increases the responsiveness of fixtures.  It will still output a full 512 channels at least once per second.
 
 View my Instructable for an ESP8266 Artnet to DMX device: http://www.instructables.com/id/ESP8266-Artnet-to-DMX/
+
+##CHANGES:
+ - Improved channel count detection to increase the refresh rate.
+ - New functions to pause & resume DMX output.
+ - New function to reset the channel buffer to zero.
+ - New function to return a pointer to the channel buffer.
 
 ##USAGE:
 
@@ -42,7 +50,19 @@ Now set some channels.  data is a byte array up to 512 length, numChans is the n
 ```
 **Note:** No data will be sent until the first setChans() function is called.  This is to ensure no "zero" data is sent on power up or reboot.
 
-To stop DMX transmission, use the following function.  It will leave the DMX line in an idle (HIGH) state.
+To stop DMX transmission, use the following function.  It will leave the DMX line in an idle (HIGH) state.  You can also pause or unPause the output which disables the interupts
 ```
   dmxN.end();
+  dmxN.pause();
+  dmxN.unPause();
+```
+
+To clear the data buffer and reset all channels to zero:
+```
+  dmxN.clearChans();
+```
+
+To get a pointer to the data buffer:
+```
+  dmxN.getChans();
 ```
