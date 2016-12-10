@@ -1,5 +1,5 @@
 /*
-espDMX library
+espDMX v2 library
 Copyright (c) 2016, Matthew Tong
 https://github.com/mtongnz/espDMX
 
@@ -36,7 +36,7 @@ struct dmx_ {
     uint8_t txPin;
     uint8_t ledPin;
     uint8_t ledIntensity;
-    uint8_t state;
+    uint8_t state = DMX_NOT_INIT;
     uint16_t numChans;
     uint16_t txChan;
     byte data[512];
@@ -76,13 +76,13 @@ void ICACHE_RAM_ATTR dmx_interrupt_handler(dmx_t* dmx) {
 }
 
 uint16_t dmx_get_tx_fifo_room(dmx_t* dmx) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return 0;
     return UART_TX_FIFO_SIZE - ((USS(dmx->dmx_nr) >> USTXC) & 0xff);
 }
 
 void dmx_transmit(dmx_t* dmx) {
-  if(dmx == 0)
+  if(dmx == 0 || dmx->state == DMX_NOT_INIT)
     return;
   
   if (dmx->state == DMX_DATA || dmx->state == DMX_FULL_UNI) {
@@ -95,6 +95,17 @@ void dmx_transmit(dmx_t* dmx) {
       
       for(; txSize; --txSize)
         USF(dmx->dmx_nr) = dmx->data[dmx->txChan++];
+
+      if (dmx->state == DMX_FULL_UNI) {
+        uint16_t newNum = dmx->numChans - 1;
+        for (; newNum > DMX_MIN_CHANS; newNum--) {
+          if (dmx->data[newNum] != 0)
+            break;
+        }
+        dmx->numChans = newNum + DMX_ADD_CHANS;
+        if (dmx->numChans > 512)
+          dmx->numChans = 512;
+      }
 
       return;
     } else {
@@ -159,7 +170,7 @@ void dmx_transmit(dmx_t* dmx) {
 }
 
 void dmx_flush(dmx_t* dmx) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return;
 
     uint32_t tmp = 0x00000000;
@@ -171,7 +182,7 @@ void dmx_flush(dmx_t* dmx) {
 }
 
 void dmx_interrupt_enable(dmx_t* dmx) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return;
 
     // Clear all 9 interupt bits
@@ -193,7 +204,7 @@ void dmx_interrupt_enable(dmx_t* dmx) {
 }
 
 void dmx_interrupt_arm(dmx_t* dmx) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return;
 
     // Enable TX Fifo Empty Interupt
@@ -201,16 +212,25 @@ void dmx_interrupt_arm(dmx_t* dmx) {
 }
 
 void dmx_interrupt_disarm(dmx_t* dmx) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return;
+
     USIE(dmx->dmx_nr) &= ~(1 << UIFE);
     //ETS_UART_INTR_DISABLE(); // never disable irq complete may its needed by the other Serial Interface!
 }
 
 void dmx_set_baudrate(dmx_t* dmx, int baud_rate) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return;
+
     USD(dmx->dmx_nr) = (ESP8266_CLOCK / baud_rate);
+}
+
+void dmx_clear_buffer(dmx_t* dmx) {
+  for (int i = 0; i < 512; i++)
+    dmx->data[i] = 0;
+  
+  dmx->numChans = DMX_MIN_CHANS;
 }
 
 dmx_t* dmx_init(int dmx_nr, int ledPin) {
@@ -230,14 +250,12 @@ dmx_t* dmx_init(int dmx_nr, int ledPin) {
     dmx->ledIntensity = 255;
     dmx->txPin = (dmx->dmx_nr == 0) ? 1 : 2;
     dmx->state = DMX_STOP;
-    dmx->numChans = 0;
     dmx->txChan = 0;
     dmx->full_uni_time = 0;
     dmx->led_timer = 0;
 
     // Initialize empty DMX buffer
-    for (int i = 0; i < 512; i++)
-      dmx->data[i] = 0;
+    dmx_clear_buffer(dmx);
 
     if (dmx->ledPin != DMX_NO_LED) {
       // Status LED initalize
@@ -255,13 +273,16 @@ dmx_t* dmx_init(int dmx_nr, int ledPin) {
 }
 
 void dmx_uninit(dmx_t* dmx) {
-    if(dmx == 0)
+    if(dmx == 0 || dmx->state == DMX_NOT_INIT)
         return;
+
     dmx_interrupt_disarm(dmx);
 
     pinMode(dmx->txPin, OUTPUT);
     digitalWrite(dmx->txPin, HIGH);
+    digitalWrite(dmx->ledPin, LOW);
     
+    dmx->dmx_nr = 3;
     os_free(dmx);
 }
 
@@ -274,19 +295,26 @@ void dmx_set_state(dmx_t* dmx, int state) {
 }
 
 void dmx_set_chans(dmx_t* dmx, uint8_t* data, uint16_t num, uint16_t start) {
+  if(dmx == 0 || dmx->state == DMX_NOT_INIT)
+    return;
+
   uint16_t newNum = start + num - 1;
   if (newNum > 512)
     newNum = 512;
 
+  // If we receive no data input, just output 30 channels
+  if (newNum < DMX_MIN_CHANS && dmx->numChans < DMX_MIN_CHANS)
+    dmx->numChans = DMX_MIN_CHANS;
+
   // Is there any new channel data
-  if (memcmp(data, &(dmx->data[start-1]), num) != 0) {
+  else if (memcmp(data, &(dmx->data[start-1]), num) != 0) {
     // Find the highest channel with new data
     for (; newNum >= dmx->numChans; newNum--, num--) {
       if (dmx->data[newNum-1] != data[num-1])
         break;
     }
 
-    newNum += 30;
+    newNum += DMX_ADD_CHANS;
     dmx->numChans = (newNum > 512) ? 512 : newNum;
     
     // Put data into our buffer
@@ -313,43 +341,65 @@ espDMX::espDMX(uint8_t dmx_nr) :
 }
 
 void espDMX::begin(uint8_t ledPin) {
-    _dmx = dmx_init(_dmx_nr, ledPin);
+    if(_dmx == 0 || _dmx->state == DMX_NOT_INIT) {
+        _dmx = dmx_init(_dmx_nr, ledPin);
+        delay(5);
+    }else {
+        _dmx->state = DMX_START;
+        dmx_transmit(_dmx);
+    }
+}
 
-    if(_dmx== 0)
-        return;
+void espDMX::pause() {
+    dmx_interrupt_disarm(_dmx);
+}
 
-    delay(5);
+void espDMX::unPause() {
+  if(_dmx == 0 || _dmx->state == DMX_NOT_INIT)
+    return;
+  
+  _dmx->state = DMX_START;
+  dmx_transmit(_dmx);
 }
 
 void espDMX::end() {
-  if(_dmx== 0)
-    return;
   dmx_uninit(_dmx);
   _dmx = 0;
 }
 
 void espDMX::setChans(byte *data, uint16_t numChans, uint16_t startChan) {
-  if(_dmx== 0)
-    return;
   dmx_set_chans(_dmx, data, numChans, startChan);
 }
 
-uint16_t espDMX::numChans() {
-  if(_dmx== 0)
+void espDMX::clearChans() {
+  if(_dmx == 0 || _dmx->state == DMX_NOT_INIT)
+    return;
+
+  dmx_clear_buffer(_dmx);
+}
+
+byte *espDMX::getChans() {
+  if(_dmx == 0 || _dmx->state == DMX_NOT_INIT)
     return 0;
+
+  return _dmx->data;
+}
+
+uint16_t espDMX::numChans() {
+  if(_dmx == 0 || _dmx->state == DMX_NOT_INIT)
+    return 0;
+
   return _dmx->numChans;
 }
 
 void espDMX::ledIntensity(uint8_t newIntensity) {
-  if (_dmx == 0)
+  if(_dmx == 0 || _dmx->state == DMX_NOT_INIT)
     return;
+
   _dmx->ledIntensity = newIntensity;
 }
 
 void espDMX::_tx_empty_irq(void) {
-  if(_dmx == 0)
-    return;
-
   dmx_transmit(_dmx);
 }
 

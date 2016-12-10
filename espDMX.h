@@ -1,5 +1,5 @@
 /*
-espDMX library
+espDMX v2 library
 Copyright (c) 2016, Matthew Tong
 https://github.com/mtongnz/espDMX
 
@@ -24,6 +24,8 @@ If not, see http://www.gnu.org/licenses/
 #define DMX_TX_BAUD           250000
 #define DMX_FULL_UNI_TIMING   1000   // How often to output full 512 channel universe (in milliseconds)
 #define DMX_NO_LED            200
+#define DMX_MIN_CHANS	      30     // Minimum channels output = this + DMX_ADD_CHANS
+#define DMX_ADD_CHANS         30     // Add extra buffer to the number of channels output
 #define byte uint8_t
 
 // DMX states
@@ -31,7 +33,8 @@ enum dmx_state {
   DMX_STOP,
   DMX_START,
   DMX_FULL_UNI,
-  DMX_DATA
+  DMX_DATA,
+  DMX_NOT_INIT
 };
 
 struct dmx_;
@@ -49,6 +52,8 @@ class espDMX: public Stream {
           ledIntensity(intensity);
         }
         void begin(uint8_t);
+        void pause();
+        void unPause();
         void end();
         void ledIntensity(uint8_t);
         
@@ -60,6 +65,8 @@ class espDMX: public Stream {
         }
         void setChans(byte*, uint16_t, uint16_t);
 
+	void clearChans();
+	byte *getChans();
         uint16_t numChans();
         
         int available(void) override;
@@ -76,7 +83,7 @@ class espDMX: public Stream {
         void _tx_empty_irq(void);
 
         int _dmx_nr;
-        dmx_t* _dmx;
+        dmx_t* _dmx = 0;
 };
 
 
