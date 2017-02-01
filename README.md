@@ -9,6 +9,8 @@ The DMX will refresh at a minimum rate of 44Hz.  The library will detect how man
 
 View my Instructable for an ESP8266 Artnet to DMX device: http://www.instructables.com/id/ESP8266-Artnet-to-DMX/
 
+If this library is helpful and you're feeling generous, why not shout me a beer:  https://www.paypal.me/mtongnz
+
 ##CHANGES:
  - Improved channel count detection to increase the refresh rate.
  - New functions to pause & resume DMX output.
