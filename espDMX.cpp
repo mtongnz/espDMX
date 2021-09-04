@@ -242,7 +242,7 @@ dmx_t* dmx_init(int dmx_nr, int ledPin) {
     }
 
     system_set_os_print(0);
-    ets_install_putc1((void *) &uart_ignore_char);
+    ets_install_putc1(&uart_ignore_char);
     
     // Initialize variables
     dmx->dmx_nr = dmx_nr;
